@@ -2,6 +2,6 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ShowAllFiles>false</ShowAllFiles>
-    <_LastSelectedProfileId>F:\WorkSpace\DiscordYoutubeUpdateListBot\DiscordYoutubeUpdateListBot\Properties\PublishProfiles\DiscordYoutubePlaylistBot - Web Deploy.pubxml</_LastSelectedProfileId>
+    <_LastSelectedProfileId>F:\WorkSpace\DiscordAutoPostYoutubeVideo\DiscordYoutubeUpdateListBot\DiscordYoutubeUpdateListBot\Properties\PublishProfiles\DiscordYoutubePlaylistBot - Web Deploy.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
 </Project>

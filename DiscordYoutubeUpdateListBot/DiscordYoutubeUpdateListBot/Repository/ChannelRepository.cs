@@ -11,13 +11,13 @@ namespace DiscordYoutubeUpdateListBot.Repository
 {
     public class ChannelRepository : IChannelRepository
     {
-        public async Task<List<string>> GetListChannelUrl()
+        public async Task<List<string>> GetListChannelUrl(ulong discordChannelId)
         {
             var googleApiKey = Common.Common
                 .GetConfigurationRoot()
                 .GetSection("GoogleApiKey").Value;
             var listVideoUrl = new List<string>();
-            var channelIds = (await GetAllChannels()).Select(x => x.ChannelId);
+            var channelIds = (await GetAllChannels(discordChannelId)).Select(x => x.ChannelId);
 
             foreach (var channelId in channelIds)
             {
@@ -53,9 +53,9 @@ namespace DiscordYoutubeUpdateListBot.Repository
             return listVideoUrl;
         }
 
-        public async Task AddChannelId(string channelId, string channelName)
+        public async Task AddChannelId(string channelId, string channelName, ulong discordChannelId)
         {
-            var child = (await Common.Common.GetClient()).Child("ChannelData");
+            var child = (await Common.Common.GetClient()).Child($"ChannelData/{discordChannelId.ToString()}");
 
             var data = new ChannelData()
             {
@@ -67,9 +67,9 @@ namespace DiscordYoutubeUpdateListBot.Repository
             await child.PostAsync(JsonConvert.SerializeObject(data));
         }
 
-        public async Task DeleteChannel(int no)
+        public async Task DeleteChannel(int no, ulong discordChannelId)
         {
-            var parent = (await Common.Common.GetClient()).Child("ChannelData");
+            var parent = (await Common.Common.GetClient()).Child($"ChannelData/{discordChannelId}");
 
             var allChannels = await parent.OnceAsync<ChannelData>();
 
@@ -108,13 +108,22 @@ namespace DiscordYoutubeUpdateListBot.Repository
             return string.Empty;
         }
 
-        public async Task<List<ChannelData>> GetAllChannels()
+        public async Task<List<ChannelData>> GetAllChannels(ulong discordChannelId)
         {
-            var child = (await Common.Common.GetClient()).Child("ChannelData");
+            var child = (await Common.Common.GetClient()).Child($"ChannelData/{discordChannelId.ToString()}");
 
             var allChannels = await child.OnceAsync<ChannelData>();
 
             return allChannels.Select(x => x.Object).ToList();
+        }
+
+        public async Task<List<ulong>> GetAllDiscordChannelId()
+        {
+            var child = (await Common.Common.GetClient()).Child("ChannelData}");
+
+            var allDiscordChannels = await child.OnceAsync<ulong>();
+
+            return allDiscordChannels.Select(x => Convert.ToUInt64(x.Key)).ToList();
         }
     }
 }
