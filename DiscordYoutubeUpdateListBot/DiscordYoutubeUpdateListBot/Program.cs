@@ -1,11 +1,11 @@
-﻿using DiscordYoutubeUpdateListBot.Repository;
+﻿using System;
+using System.Threading.Tasks;
+using System.Timers;
+using DiscordYoutubeUpdateListBot.Repository;
 using DiscordYoutubeUpdateListBot.Service;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading.Tasks;
-using System.Timers;
 
 namespace DiscordYoutubeUpdateListBot
 {
@@ -15,7 +15,6 @@ namespace DiscordYoutubeUpdateListBot
 
         static async Task Main(string[] args)
         {
-
             var services = new ServiceCollection();
 
             services
