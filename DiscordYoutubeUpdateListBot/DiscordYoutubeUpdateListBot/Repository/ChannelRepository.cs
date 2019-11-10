@@ -11,18 +11,19 @@ namespace DiscordYoutubeUpdateListBot.Repository
 {
     public class ChannelRepository : IChannelRepository
     {
-        public async Task<List<string>> GetListChannelUrl(ulong discordChannelId)
+        public async Task<Dictionary<ulong, List<string>>> GetListChannelUrl(ulong discordChannelId)
         {
             var googleApiKey = Common.Common
                 .GetConfigurationRoot()
                 .GetSection("GoogleApiKey").Value;
             var listVideoUrl = new List<string>();
+            var dicChannelVideoUrl = new Dictionary<ulong, List<string>>();
             var channelIds = (await GetAllChannels(discordChannelId)).Select(x => x.ChannelId);
 
             foreach (var channelId in channelIds)
             {
                 var requestUrl =
-                    $"https://www.googleapis.com/youtube/v3/search?key={googleApiKey}&channelId={channelId}&part=snippet,id&order=date&maxResults=5";
+                    $"https://www.googleapis.com/youtube/v3/search?key={googleApiKey}&channelId={channelId}&part=snippet,id&order=date&maxResults=5&type=video";
 
                 var httpClient = new HttpClient();
 
@@ -34,23 +35,32 @@ namespace DiscordYoutubeUpdateListBot.Repository
                     var objContent = JsonConvert.DeserializeObject<JObject>(content);
                     var objContentItems = objContent["items"].Value<JArray>();
 
-                    foreach (var item in objContentItems)
+                    if(objContentItems != null)
                     {
-                        var id = item["id"].Value<JObject>();
-                        var videoId = id["videoId"].Value<string>();
-
-                        var snippet = item["snippet"].Value<JObject>();
-                        var publishedAt = Convert.ToDateTime(snippet["publishedAt"].Value<string>());
-
-                        if (publishedAt > DateTime.UtcNow.AddHours(-1) && publishedAt < DateTime.UtcNow)
+                        foreach (var item in objContentItems)
                         {
-                            listVideoUrl.Add(videoId);
+                            var id = item["id"].Value<JObject>();
+                            var videoId = id["videoId"].ToString();
+
+                            var snippet = item["snippet"].Value<JObject>();
+                            var publishedAt = Convert.ToDateTime(snippet["publishedAt"].ToString());
+
+                            if (publishedAt > DateTime.UtcNow.AddHours(-1) && publishedAt < DateTime.UtcNow)
+                            {
+                                listVideoUrl.Add(videoId);
+                            }
                         }
                     }
+
                 }
             }
 
-            return listVideoUrl;
+            if (listVideoUrl.Count > 0)
+            {
+                dicChannelVideoUrl.Add(discordChannelId, listVideoUrl);
+            }
+
+            return dicChannelVideoUrl;
         }
 
         public async Task AddChannelId(string channelId, string channelName, ulong discordChannelId)
@@ -119,9 +129,9 @@ namespace DiscordYoutubeUpdateListBot.Repository
 
         public async Task<List<ulong>> GetAllDiscordChannelId()
         {
-            var child = (await Common.Common.GetClient()).Child("ChannelData}");
+            var child = (await Common.Common.GetClient()).Child("ChannelData");
 
-            var allDiscordChannels = await child.OnceAsync<ulong>();
+            var allDiscordChannels = await child.OnceAsync<object>();
 
             return allDiscordChannels.Select(x => Convert.ToUInt64(x.Key)).ToList();
         }

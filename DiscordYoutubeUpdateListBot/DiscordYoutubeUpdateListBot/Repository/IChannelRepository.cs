@@ -6,7 +6,7 @@ namespace DiscordYoutubeUpdateListBot.Repository
 {
     public interface IChannelRepository
     {
-        Task<List<string>> GetListChannelUrl(ulong discordChannelId);
+        Task<Dictionary<ulong, List<string>>> GetListChannelUrl(ulong discordChannelId);
 
         Task AddChannelId(string channelId, string channelName, ulong discordChannelId);
 

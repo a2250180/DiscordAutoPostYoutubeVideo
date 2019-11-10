@@ -1,9 +1,7 @@
-﻿using DiscordYoutubeUpdateListBot.Model;
-using DiscordYoutubeUpdateListBot.Repository;
+﻿using DiscordYoutubeUpdateListBot.Repository;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,24 +23,29 @@ namespace DiscordYoutubeUpdateListBot.Service
         public async Task PostVideoUrl()
         {
             var allDiscordChannel = await GetAllDiscordChannel();
-            foreach(var discordId in allDiscordChannel)
+
+            foreach (var discordId in allDiscordChannel)
             {
                 var youtubeUrlFormat = "https://www.youtube.com/watch?v={0}";
                 var allChannelVideoUrl = await GetChannelVideoId(discordId);
                 var sb = new StringBuilder();
 
-                var discordChannelId = Common.Common
-                    .GetConfigurationRoot()
-                    .GetSection("DiscordChannelId").Value;
+                var discordChannel = await discordClient.GetChannelAsync(discordId);
 
-                var discordChannel = await discordClient.GetChannelAsync(Convert.ToUInt64(discordChannelId));
-
-                foreach (var url in allChannelVideoUrl)
+                if (allChannelVideoUrl.Count > 0)
                 {
-                    sb.AppendLine(string.Format(youtubeUrlFormat, url));
-                }
+                    foreach (var url in allChannelVideoUrl[discordId])
+                    {
+                        sb.AppendLine(string.Format(youtubeUrlFormat, url));
+                    }
 
-                await discordClient.SendMessageAsync(discordChannel, sb.ToString());
+                    await discordClient.SendMessageAsync(discordChannel, sb.ToString());
+                }
+                else
+                {
+                    await discordClient.SendMessageAsync(discordChannel, "沒有影片");
+                }
+                sb.Clear();
             }
         }
 
@@ -73,8 +76,8 @@ namespace DiscordYoutubeUpdateListBot.Service
             var allChannel = await _getChannelData.GetAllChannels(ctx.Message.ChannelId);
             var counter = 1;
             StringBuilder sb = new StringBuilder();
-            
-            foreach(var c in allChannel)
+
+            foreach (var c in allChannel)
             {
                 sb.AppendLine($"{counter++}. {c.ChannelName}");
             }
@@ -101,7 +104,7 @@ namespace DiscordYoutubeUpdateListBot.Service
             await ctx.Message.RespondAsync(helpMsg);
         }
 
-        private async Task<List<string>> GetChannelVideoId(ulong discordId)
+        private async Task<Dictionary<ulong, List<string>>> GetChannelVideoId(ulong discordId)
         {
             return await _getChannelData.GetListChannelUrl(discordId);
         }
